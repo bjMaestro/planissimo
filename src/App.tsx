@@ -185,15 +185,16 @@ function App() {
       }}
     >
       <div
-        style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-          background: "white",
-          border: "2px solid #2c3e70",
-          borderRadius: "16px",
-          padding: "50px",
-        }}
-      >
+  style={{
+    width: "100%",
+    minHeight: "100vh",
+    background: "white",
+    border: "2px solid #2c3e70",
+    borderRadius: "0px",
+    padding: "50px 80px",
+    boxSizing: "border-box",
+  }}
+>
         <h1
           style={{
             fontFamily: "'Righteous', sans-serif",
