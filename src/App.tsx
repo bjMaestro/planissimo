@@ -72,12 +72,10 @@ function App() {
     Papa.parse<RehearsalRow>(CSV_URL, {
       download: true,
       header: true,
-      complete: (results) => {
-        const rows = results.data.filter((row) => row.Date);
-        setData(rows);
+      complete: (results: Papa.ParseResult<RehearsalRow>) => {
+  const rows = results.data.filter((row: RehearsalRow) => row.Date);
 
-        const rehearsalInstances: string[] = rows.map(
-          (row) => `${row.Ensemble}||${row.Date}`
+        const rehearsalInstances: string[] = rows.map((row: RehearsalRow) => `${row.Ensemble}||${row.Date}`
         );
 
         const uniqueInstances = Array.from(new Set(rehearsalInstances))
