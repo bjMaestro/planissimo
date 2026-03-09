@@ -4,19 +4,29 @@ import Papa from "papaparse";
 const CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4IgUUEP_0stkksstahZ3-W20q0D55OT5HFZIkkhdquVjDkXvTOQmgJwC5JTsQntMHgGC-vltGQ_Gv/pub?output=csv";
 
+type RehearsalRow = {
+  Date: string;
+  Ensemble: string;
+  "Agenda Step": string;
+  "Time Allotted": string;
+  Objective: string;
+  Notes?: string;
+};
+
 function App() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<RehearsalRow[]>([]);
   const [instances, setInstances] = useState<string[]>([]);
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
 
   const [activeTimer, setActiveTimer] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   // ---------- DATE HELPERS ----------
+
   const parseLocalDate = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
     return new Date(year, month - 1, day);
@@ -56,20 +66,21 @@ function App() {
     });
   };
 
-  // ---------- FETCH ----------
+  // ---------- FETCH CSV ----------
+
   useEffect(() => {
-    Papa.parse(CSV_URL, {
+    Papa.parse<RehearsalRow>(CSV_URL, {
       download: true,
       header: true,
       complete: (results) => {
-        const rows = results.data.filter((row: any) => row.Date);
+        const rows = results.data.filter((row) => row.Date);
         setData(rows);
 
-        const rehearsalInstances = rows.map(
-          (row: any) => `${row["Ensemble"]}||${row["Date"]}`
+        const rehearsalInstances: string[] = rows.map(
+          (row) => `${row.Ensemble}||${row.Date}`
         );
 
-        const uniqueInstances = [...new Set(rehearsalInstances)]
+        const uniqueInstances = Array.from(new Set(rehearsalInstances))
           .filter((instance) => {
             const [, date] = instance.split("||");
             return isThisWeek(date);
@@ -112,7 +123,7 @@ function App() {
     if (!selectedInstance) return [];
     const [ensemble, date] = selectedInstance.split("||");
     return data.filter(
-      (row) => row["Date"] === date && row["Ensemble"] === ensemble
+      (row) => row.Date === date && row.Ensemble === ensemble
     );
   }, [data, selectedInstance]);
 
@@ -125,9 +136,10 @@ function App() {
     : "";
 
   // ---------- TIMER ----------
+
   useEffect(() => {
     if (activeTimer && !isPaused && remainingSeconds > 0) {
-      timerRef.current = setTimeout(() => {
+      timerRef.current = window.setTimeout(() => {
         setRemainingSeconds((prev) => prev - 1);
       }, 1000);
     }
@@ -138,7 +150,7 @@ function App() {
     }
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) window.clearTimeout(timerRef.current);
     };
   }, [remainingSeconds, activeTimer, isPaused]);
 
@@ -159,6 +171,8 @@ function App() {
 
   const activeStep =
     activeStepIndex !== null ? filteredData[activeStepIndex] : null;
+
+  // ---------- UI ----------
 
   return (
     <div
@@ -242,7 +256,6 @@ function App() {
                 gap: "50px",
               }}
             >
-              {/* LEFT */}
               <div>
                 {filteredData.map((row, index) => {
                   const isActive = index === activeStepIndex;
@@ -281,7 +294,6 @@ function App() {
                 })}
               </div>
 
-              {/* RIGHT */}
               <div
                 style={{
                   borderLeft: "2px solid #2c3e70",
