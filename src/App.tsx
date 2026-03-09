@@ -173,25 +173,25 @@ function App() {
   // ---------- UI ----------
 
   return (
-    <div
-      style={{
-        background: "#f7f7f9",
-        minHeight: "100vh",
-        padding: "70px 20px",
-        fontFamily: "'Outfit', sans-serif",
-        color: "#1f2233",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-          background: "white",
-          border: "2px solid #2c3e70",
-          borderRadius: "16px",
-          padding: "50px",
-        }}
-      >
+   <div
+  style={{
+    background: "#f7f7f9",
+    minHeight: "100vh",
+    fontFamily: "'Outfit', sans-serif",
+    color: "#1f2233",
+  }}
+>
+  <div
+    style={{
+      width: "100%",
+      minHeight: "100vh",
+      background: "white",
+      borderLeft: "4px solid #2c3e70",
+      borderRight: "4px solid #2c3e70",
+      padding: "60px 80px",
+      boxSizing: "border-box",
+    }}
+  >
         <h1
           style={{
             fontFamily: "'Righteous', sans-serif",
