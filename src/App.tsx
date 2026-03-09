@@ -175,15 +175,17 @@ function App() {
   // ---------- UI ----------
 
   return (
-    <div
-      style={{
-        background: "#f7f7f9",
-        minHeight: "100vh",
-        padding: "70px 20px",
-        fontFamily: "'Outfit', sans-serif",
-        color: "#1f2233",
-      }}
-    >
+   <div
+  style={{
+    background: "#f7f7f9",
+    minHeight: "100vh",
+    width: "100vw",
+    margin: 0,
+    padding: 0,
+    fontFamily: "'Outfit', sans-serif",
+    color: "#1f2233",
+  }}
+>
       <div
   style={{
     width: "100%",
@@ -191,7 +193,7 @@ function App() {
     background: "white",
     border: "2px solid #2c3e70",
     borderRadius: "0px",
-    padding: "50px 80px",
+    padding: "60px 80px",
     boxSizing: "border-box",
   }}
 >
