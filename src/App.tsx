@@ -4,7 +4,7 @@ import Papa from "papaparse";
 const CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4IgUUEP_0stkksstahZ3-W20q0D55OT5HFZIkkhdquVjDkXvTOQmgJwC5JTsQntMHgGC-vltGQ_Gv/pub?output=csv";
 
-type RehearsalRow = {
+type Row = {
   Date: string;
   Ensemble: string;
   "Agenda Step": string;
@@ -14,13 +14,13 @@ type RehearsalRow = {
 };
 
 function App() {
-  const [data, setData] = useState<RehearsalRow[]>([]);
+  const [data, setData] = useState<Row[]>([]);
   const [instances, setInstances] = useState<string[]>([]);
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
 
   const [activeTimer, setActiveTimer] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   const timerRef = useRef<number | null>(null);
@@ -28,15 +28,15 @@ function App() {
   // ---------- DATE HELPERS ----------
 
   const parseLocalDate = (dateString: string) => {
-    const [year, month, day] = dateString.split("-").map(Number);
-    return new Date(year, month - 1, day);
+    const [y, m, d] = dateString.split("-").map(Number);
+    return new Date(y, m - 1, d);
   };
 
-  const getStartOfWeek = (baseDate: Date) => {
-    const date = new Date(baseDate);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(date.getFullYear(), date.getMonth(), diff);
+  const getStartOfWeek = (date: Date) => {
+    const copy = new Date(date);
+    const day = copy.getDay();
+    const diff = copy.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(copy.getFullYear(), copy.getMonth(), diff);
   };
 
   const isThisWeek = (dateString: string) => {
@@ -47,19 +47,19 @@ function App() {
       today.getDate()
     );
 
-    const startOfWeek = getStartOfWeek(todayLocal);
-    startOfWeek.setHours(0, 0, 0, 0);
+    const start = getStartOfWeek(todayLocal);
+    start.setHours(0, 0, 0, 0);
 
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
 
     const date = parseLocalDate(dateString);
-    return date >= startOfWeek && date <= endOfWeek;
+
+    return date >= start && date <= end;
   };
 
   const formatDisplayDate = (dateString: string) => {
-    const date = parseLocalDate(dateString);
-    return date.toLocaleDateString("en-US", {
+    return parseLocalDate(dateString).toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
@@ -69,71 +69,63 @@ function App() {
   // ---------- FETCH CSV ----------
 
   useEffect(() => {
-    Papa.parse<RehearsalRow>(CSV_URL, {
+    Papa.parse<Row>(CSV_URL, {
       download: true,
       header: true,
       complete: (results) => {
-        const rows = results.data.filter((row) => row.Date);
+        const rows = results.data.filter((r) => r.Date);
         setData(rows);
 
         const rehearsalInstances = rows.map(
-          (row) => `${row.Ensemble}||${row.Date}`
+          (r) => `${r.Ensemble}||${r.Date}`
         );
 
-        const uniqueInstances = Array.from(new Set(rehearsalInstances))
+        const unique = Array.from(new Set(rehearsalInstances))
           .filter((instance) => {
             const [, date] = instance.split("||");
             return isThisWeek(date);
           })
           .sort((a, b) => {
-            const [ensembleA, dateA] = a.split("||");
-            const [ensembleB, dateB] = b.split("||");
+            const [ea, da] = a.split("||");
+            const [eb, db] = b.split("||");
 
-            const dA = parseLocalDate(dateA).getTime();
-            const dB = parseLocalDate(dateB).getTime();
+            const timeA = parseLocalDate(da).getTime();
+            const timeB = parseLocalDate(db).getTime();
 
-            if (dA !== dB) return dA - dB;
-            return ensembleA.localeCompare(ensembleB);
+            if (timeA !== timeB) return timeA - timeB;
+            return ea.localeCompare(eb);
           });
 
-        setInstances(uniqueInstances);
-        autoSelect(uniqueInstances);
+        setInstances(unique);
+
+        const today = new Date();
+        const todayString = `${today.getFullYear()}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+        const todays = unique.filter((i) =>
+          i.endsWith(`||${todayString}`)
+        );
+
+        if (todays.length === 1) {
+          setSelectedInstance(todays[0]);
+        } else {
+          setSelectedInstance(null);
+        }
       },
     });
   }, []);
-
-  const autoSelect = (uniqueInstances: string[]) => {
-    const today = new Date();
-    const todayString = `${today.getFullYear()}-${String(
-      today.getMonth() + 1
-    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-    const todaysInstances = uniqueInstances.filter((instance) =>
-      instance.endsWith(`||${todayString}`)
-    );
-
-    if (todaysInstances.length === 1) {
-      setSelectedInstance(todaysInstances[0]);
-    } else {
-      setSelectedInstance(null);
-    }
-  };
 
   const filteredData = useMemo(() => {
     if (!selectedInstance) return [];
     const [ensemble, date] = selectedInstance.split("||");
     return data.filter(
-      (row) => row.Date === date && row.Ensemble === ensemble
+      (r) => r.Date === date && r.Ensemble === ensemble
     );
   }, [data, selectedInstance]);
 
-  const ensembleName = selectedInstance
-    ? selectedInstance.split("||")[0]
-    : "";
-
-  const displayDate = selectedInstance
-    ? selectedInstance.split("||")[1]
-    : "";
+  const activeStep =
+    activeStepIndex !== null ? filteredData[activeStepIndex] : null;
 
   // ---------- TIMER ----------
 
@@ -168,9 +160,6 @@ function App() {
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
-
-  const activeStep =
-    activeStepIndex !== null ? filteredData[activeStepIndex] : null;
 
   // ---------- UI ----------
 
@@ -213,7 +202,7 @@ function App() {
         {instances.length > 0 && (
           <div style={{ marginBottom: "40px" }}>
             <select
-              value={selectedInstance || ""}
+              value={selectedInstance ?? ""}
               onChange={(e) => {
                 setSelectedInstance(e.target.value);
                 setActiveStepIndex(null);
@@ -227,10 +216,10 @@ function App() {
               }}
             >
               <option value="">Select Rehearsal</option>
-              {instances.map((instance, index) => {
+              {instances.map((instance, i) => {
                 const [ensemble, date] = instance.split("||");
                 return (
-                  <option key={index} value={instance}>
+                  <option key={i} value={instance}>
                     {ensemble} — {formatDisplayDate(date)}
                   </option>
                 );
@@ -247,7 +236,6 @@ function App() {
               gap: "50px",
             }}
           >
-            {/* LEFT */}
             <div>
               {filteredData.map((row, index) => {
                 const isActive = index === activeStepIndex;
@@ -286,7 +274,6 @@ function App() {
               })}
             </div>
 
-            {/* RIGHT */}
             <div
               style={{
                 borderLeft: "2px solid #2c3e70",
