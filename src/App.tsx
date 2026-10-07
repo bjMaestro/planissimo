@@ -32,7 +32,7 @@ function App() {
   const timerIntervalRef = useRef<number | null>(null);
   const pulseTimeoutRef = useRef<number | null>(null);
 
-  // Web Audio references for the two-note cue
+  // Two-note cue
   const audioContextRef = useRef<AudioContext | null>(null);
   const scheduledCueNodesRef = useRef<OscillatorNode[]>([]);
 
@@ -47,11 +47,13 @@ function App() {
     const date = new Date(baseDate);
     const day = date.getDay();
     const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+
     return new Date(date.getFullYear(), date.getMonth(), diff);
   };
 
   const isThisWeek = (dateString: string) => {
     const today = new Date();
+
     const todayLocal = new Date(
       today.getFullYear(),
       today.getMonth(),
@@ -166,7 +168,7 @@ function App() {
       try {
         oscillator.stop();
       } catch {
-        // The oscillator may already have finished.
+        // Oscillator may already have finished.
       }
     });
 
@@ -189,7 +191,6 @@ function App() {
 
       const cueStart = context.currentTime + delaySeconds;
 
-      // A gentle ascending two-note cue.
       const notes = [
         {
           frequency: 523.25,
@@ -197,7 +198,7 @@ function App() {
         },
         {
           frequency: 659.25,
-          startOffset: 0.32,
+          startOffset: 0.34,
         },
       ];
 
@@ -206,14 +207,22 @@ function App() {
         const gain = context.createGain();
 
         const noteStart = cueStart + startOffset;
-        const noteEnd = noteStart + 0.3;
+        const noteEnd = noteStart + 0.36;
 
         oscillator.type = "sine";
         oscillator.frequency.setValueAtTime(frequency, noteStart);
 
         gain.gain.setValueAtTime(0.0001, noteStart);
-        gain.gain.exponentialRampToValueAtTime(0.055, noteStart + 0.025);
-        gain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.095,
+          noteStart + 0.035
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.0001,
+          noteEnd
+        );
 
         oscillator.connect(gain);
         gain.connect(context.destination);
@@ -224,8 +233,7 @@ function App() {
         scheduledCueNodesRef.current.push(oscillator);
       });
     } catch {
-      // If the browser blocks background audio,
-      // the timer and visual completion state still work normally.
+      // Timer and visual completion still work if audio is blocked.
     }
   };
 
@@ -259,20 +267,20 @@ function App() {
           window.clearTimeout(pulseTimeoutRef.current);
         }
 
+        // Three gentle pulses over roughly 2.5 seconds.
         pulseTimeoutRef.current = window.setTimeout(() => {
           setCompletionPulse(false);
-        }, 900);
+        }, 2500);
       }
     };
 
-    // Update immediately.
     updateTimer();
 
-    // Frequent checks keep the visible timer smooth while this frame is active.
-    timerIntervalRef.current = window.setInterval(updateTimer, 250);
+    timerIntervalRef.current = window.setInterval(
+      updateTimer,
+      250
+    );
 
-    // These make the timer immediately catch up when the browser/frame
-    // becomes active again after being throttled.
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         updateTimer();
@@ -348,7 +356,8 @@ function App() {
       return;
     }
 
-    const endTime = Date.now() + remainingSeconds * 1000;
+    const endTime =
+      Date.now() + remainingSeconds * 1000;
 
     setTimerEndTime(endTime);
     setIsPaused(false);
@@ -388,350 +397,474 @@ function App() {
   // ---------- UI ----------
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        width: "100vw",
-        margin: 0,
-        padding: "18px",
-        boxSizing: "border-box",
+    <>
+      <style>
+        {`
+          @keyframes planissimoTimerPulse {
+            0% {
+              background-color: #eef1f9;
+            }
 
-        // Deep-indigo wrapper with a faint staff-like texture.
-        backgroundColor: "#2c3e70",
-        backgroundImage: `
-          repeating-linear-gradient(
-            to bottom,
-            rgba(255,255,255,0.045) 0px,
-            rgba(255,255,255,0.045) 1px,
-            transparent 1px,
-            transparent 9px
-          ),
-          linear-gradient(
-            135deg,
-            #24345f 0%,
-            #2c3e70 52%,
-            #354d86 100%
-          )
-        `,
+            50% {
+              background-color: #cfd9f7;
+            }
 
-        fontFamily: "'Outfit', sans-serif",
-        color: "#1f2233",
-      }}
-    >
+            100% {
+              background-color: #eef1f9;
+            }
+          }
+        `}
+      </style>
+
       <div
         style={{
+          minHeight: "100vh",
           width: "100%",
-          minHeight: "calc(100vh - 36px)",
+          margin: 0,
 
-          // White normally, pale indigo after timer completion.
-          background: completionPulse
-            ? "#dbe4ff"
-            : timerComplete
+          // More exposed background around the white surface.
+          padding: "28px 32px",
+
+          boxSizing: "border-box",
+          overflowX: "hidden",
+
+          /*
+            Abstract rhythmic background:
+            diagonal motion, soft circular beats, and subtle line structure.
+          */
+          backgroundColor: "#2c3e70",
+
+          backgroundImage: `
+            radial-gradient(
+              circle at 14% 22%,
+              rgba(255,255,255,0.13) 0px,
+              rgba(255,255,255,0.13) 3px,
+              transparent 4px
+            ),
+
+            radial-gradient(
+              circle at 84% 68%,
+              rgba(255,255,255,0.10) 0px,
+              rgba(255,255,255,0.10) 4px,
+              transparent 5px
+            ),
+
+            repeating-linear-gradient(
+              135deg,
+              transparent 0px,
+              transparent 54px,
+              rgba(255,255,255,0.07) 54px,
+              rgba(255,255,255,0.07) 56px,
+              transparent 56px,
+              transparent 108px
+            ),
+
+            repeating-linear-gradient(
+              45deg,
+              transparent 0px,
+              transparent 145px,
+              rgba(255,255,255,0.045) 145px,
+              rgba(255,255,255,0.045) 147px,
+              transparent 147px,
+              transparent 290px
+            ),
+
+            linear-gradient(
+              135deg,
+              #22335f 0%,
+              #2c3e70 50%,
+              #38518a 100%
+            )
+          `,
+
+          fontFamily: "'Outfit', sans-serif",
+          color: "#1f2233",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+
+            minHeight: "calc(100vh - 56px)",
+
+            background: timerComplete
               ? "#eef1f9"
               : "white",
 
-          border: "2px solid #2c3e70",
-          borderRadius: "14px",
+            animation: completionPulse
+              ? "planissimoTimerPulse 0.8s ease-in-out 3"
+              : "none",
 
-          padding: "60px 80px",
-          boxSizing: "border-box",
+            border: "2px solid #2c3e70",
+            borderRadius: "16px",
 
-          transition: completionPulse
-            ? "background-color 180ms ease"
-            : "background-color 500ms ease",
+            padding: "60px 80px",
 
-          boxShadow: "0 10px 30px rgba(18, 28, 55, 0.24)",
-        }}
-      >
-        <h1
-          style={{
-            fontFamily: "'Righteous', sans-serif",
-            fontSize: "46px",
-            color: "#2c3e70",
-            marginBottom: "6px",
-            letterSpacing: "1px",
+            boxSizing: "border-box",
+
+            boxShadow:
+              "0 12px 34px rgba(13, 24, 52, 0.30)",
           }}
         >
-          Planissimo
-        </h1>
-
-        <p
-          style={{
-            color: "#6b7280",
-            marginBottom: "40px",
-          }}
-        >
-          Where preparation becomes music.
-        </p>
-
-        {instances.length > 0 && (
-          <div
+          <h1
             style={{
+              fontFamily: "'Righteous', sans-serif",
+              fontSize: "46px",
+              color: "#2c3e70",
+              marginBottom: "6px",
+              letterSpacing: "1px",
+            }}
+          >
+            Planissimo
+          </h1>
+
+          <p
+            style={{
+              color: "#6b7280",
               marginBottom: "40px",
             }}
           >
-            <select
-              value={selectedInstance || ""}
-              onChange={(e) => {
-                clearTimerForStepChange();
-                setSelectedInstance(e.target.value);
-                setActiveStepIndex(null);
-              }}
-              style={{
-                padding: "12px",
-                borderRadius: "8px",
-                border: "2px solid #2c3e70",
-                width: "100%",
-                fontSize: "16px",
-                fontFamily: "'Outfit', sans-serif",
-              }}
-            >
-              <option value="">
-                Select Rehearsal
-              </option>
+            Where preparation becomes music.
+          </p>
 
-              {instances.map((instance, index) => {
-                const [ensemble, date] =
-                  instance.split("||");
-
-                return (
-                  <option
-                    key={index}
-                    value={instance}
-                  >
-                    {ensemble} —{" "}
-                    {formatDisplayDate(date)}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        )}
-
-        {selectedInstance && (
-          <>
-            <h2
-              style={{
-                color: "#2c3e70",
-                marginBottom: "4px",
-              }}
-            >
-              {ensembleName}
-            </h2>
-
+          {instances.length > 0 && (
             <div
               style={{
-                marginBottom: "30px",
-                color: "#6b7280",
+                marginBottom: "40px",
               }}
             >
-              {formatDisplayDate(displayDate)}
-            </div>
+              <select
+                value={selectedInstance || ""}
+                onChange={(e) => {
+                  clearTimerForStepChange();
+                  setSelectedInstance(e.target.value);
+                  setActiveStepIndex(null);
+                }}
+                style={{
+                  padding: "12px",
+                  borderRadius: "8px",
+                  border: "2px solid #2c3e70",
+                  width: "100%",
+                  fontSize: "16px",
+                  fontFamily:
+                    "'Outfit', sans-serif",
+                }}
+              >
+                <option value="">
+                  Select Rehearsal
+                </option>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1.2fr",
-                gap: "50px",
-              }}
-            >
-              {/* LEFT COLUMN */}
-
-              <div>
-                {filteredData.map(
-                  (row, index) => {
-                    const isActive =
-                      index === activeStepIndex;
+                {instances.map(
+                  (instance, index) => {
+                    const [ensemble, date] =
+                      instance.split("||");
 
                     return (
-                      <div
+                      <option
                         key={index}
-                        onClick={() => {
-                          clearTimerForStepChange();
-                          setActiveStepIndex(index);
-                        }}
-                        style={{
-                          padding: "12px",
-                          marginBottom: "14px",
-                          cursor: "pointer",
-
-                          borderLeft: isActive
-                            ? "8px solid #2c3e70"
-                            : "8px solid transparent",
-
-                          background: isActive
-                            ? "#eef1f9"
-                            : "transparent",
-
-                          fontWeight: 500,
-                        }}
+                        value={instance}
                       >
-                        {row["Agenda Step"]}
-
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            color: "#6b7280",
-                            marginTop: "4px",
-                          }}
-                        >
-                          {row["Time Allotted"]}{" "}
-                          minutes
-                        </div>
-                      </div>
+                        {ensemble} —{" "}
+                        {formatDisplayDate(date)}
+                      </option>
                     );
                   }
                 )}
-              </div>
+              </select>
+            </div>
+          )}
 
-              {/* RIGHT COLUMN */}
+          {selectedInstance && (
+            <>
+              <h2
+                style={{
+                  color: "#2c3e70",
+                  marginBottom: "4px",
+                }}
+              >
+                {ensembleName}
+              </h2>
 
               <div
                 style={{
-                  borderLeft:
-                    "2px solid #2c3e70",
-
-                  paddingLeft: "35px",
+                  marginBottom: "30px",
+                  color: "#6b7280",
                 }}
               >
-                {!activeStep && (
-                  <div
-                    style={{
-                      color: "#6b7280",
-                    }}
-                  >
-                    Select a rehearsal focus.
-                  </div>
-                )}
+                {formatDisplayDate(displayDate)}
+              </div>
 
-                {activeStep && (
-                  <>
-                    <h3
-                      style={{
-                        color: "#2c3e70",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      {activeStep["Agenda Step"]}
-                    </h3>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "1fr 1.2fr",
 
-                    <div
-                      style={{
-                        marginBottom: "10px",
-                        color: "#6b7280",
-                      }}
-                    >
-                      {
-                        activeStep[
-                          "Time Allotted"
-                        ]
-                      }{" "}
-                      minutes
-                    </div>
+                  gap: "50px",
+                }}
+              >
+                {/* LEFT COLUMN */}
 
-                    <div
-                      style={{
-                        marginBottom: "25px",
-                      }}
-                    >
-                      {activeStep["Objective"]}
-                    </div>
+                <div>
+                  {filteredData.map(
+                    (row, index) => {
+                      const isActive =
+                        index ===
+                        activeStepIndex;
 
-                    {!activeTimer &&
-                      !timerComplete && (
-                        <button
-                          onClick={() =>
-                            startTimer(
-                              Number(
-                                activeStep[
-                                  "Time Allotted"
-                                ]
-                              ) || 0
-                            )
-                          }
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            clearTimerForStepChange();
+                            setActiveStepIndex(
+                              index
+                            );
+                          }}
                           style={{
-                            padding:
-                              "10px 18px",
+                            padding: "12px",
+                            marginBottom:
+                              "14px",
 
-                            background:
-                              "#2c3e70",
-
-                            color: "white",
-                            border: "none",
-                            borderRadius: "8px",
                             cursor: "pointer",
 
-                            fontFamily:
-                              "'Outfit', sans-serif",
-                          }}
-                        >
-                          Start
-                        </button>
-                      )}
-
-                    {activeTimer && (
-                      <>
-                        <button
-                          onClick={
-                            isPaused
-                              ? resumeTimer
-                              : pauseTimer
-                          }
-                          style={{
-                            padding:
-                              "10px 18px",
+                            borderLeft:
+                              isActive
+                                ? "8px solid #2c3e70"
+                                : "8px solid transparent",
 
                             background:
-                              "#2c3e70",
+                              isActive
+                                ? "#eef1f9"
+                                : "transparent",
 
-                            color: "white",
-                            border: "none",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-
-                            fontFamily:
-                              "'Outfit', sans-serif",
+                            fontWeight: 500,
                           }}
                         >
-                          {isPaused
-                            ? "Resume"
-                            : "Pause"}
-                        </button>
+                          {
+                            row[
+                              "Agenda Step"
+                            ]
+                          }
 
-                        <span
-                          style={{
-                            marginLeft: "18px",
-                            fontSize: "18px",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {formatTime(
-                            remainingSeconds
-                          )}
-                        </span>
-                      </>
-                    )}
+                          <div
+                            style={{
+                              fontSize:
+                                "13px",
 
-                    {timerComplete && (
-                      <span
+                              color:
+                                "#6b7280",
+
+                              marginTop:
+                                "4px",
+                            }}
+                          >
+                            {
+                              row[
+                                "Time Allotted"
+                              ]
+                            }{" "}
+                            minutes
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+
+                {/* RIGHT COLUMN */}
+
+                <div
+                  style={{
+                    borderLeft:
+                      "2px solid #2c3e70",
+
+                    paddingLeft:
+                      "35px",
+                  }}
+                >
+                  {!activeStep && (
+                    <div
+                      style={{
+                        color:
+                          "#6b7280",
+                      }}
+                    >
+                      Select a rehearsal
+                      focus.
+                    </div>
+                  )}
+
+                  {activeStep && (
+                    <>
+                      <h3
                         style={{
-                          display: "inline-block",
-                          color: "#2c3e70",
-                          fontWeight: 600,
-                          fontSize: "18px",
+                          color:
+                            "#2c3e70",
+
+                          marginBottom:
+                            "10px",
                         }}
                       >
-                        0:00
-                      </span>
-                    )}
-                  </>
-                )}
+                        {
+                          activeStep[
+                            "Agenda Step"
+                          ]
+                        }
+                      </h3>
+
+                      <div
+                        style={{
+                          marginBottom:
+                            "10px",
+
+                          color:
+                            "#6b7280",
+                        }}
+                      >
+                        {
+                          activeStep[
+                            "Time Allotted"
+                          ]
+                        }{" "}
+                        minutes
+                      </div>
+
+                      <div
+                        style={{
+                          marginBottom:
+                            "25px",
+                        }}
+                      >
+                        {
+                          activeStep[
+                            "Objective"
+                          ]
+                        }
+                      </div>
+
+                      {!activeTimer &&
+                        !timerComplete && (
+                          <button
+                            onClick={() =>
+                              startTimer(
+                                Number(
+                                  activeStep[
+                                    "Time Allotted"
+                                  ]
+                                ) || 0
+                              )
+                            }
+                            style={{
+                              padding:
+                                "10px 18px",
+
+                              background:
+                                "#2c3e70",
+
+                              color:
+                                "white",
+
+                              border:
+                                "none",
+
+                              borderRadius:
+                                "8px",
+
+                              cursor:
+                                "pointer",
+
+                              fontFamily:
+                                "'Outfit', sans-serif",
+                            }}
+                          >
+                            Start
+                          </button>
+                        )}
+
+                      {activeTimer && (
+                        <>
+                          <button
+                            onClick={
+                              isPaused
+                                ? resumeTimer
+                                : pauseTimer
+                            }
+                            style={{
+                              padding:
+                                "10px 18px",
+
+                              background:
+                                "#2c3e70",
+
+                              color:
+                                "white",
+
+                              border:
+                                "none",
+
+                              borderRadius:
+                                "8px",
+
+                              cursor:
+                                "pointer",
+
+                              fontFamily:
+                                "'Outfit', sans-serif",
+                            }}
+                          >
+                            {isPaused
+                              ? "Resume"
+                              : "Pause"}
+                          </button>
+
+                          <span
+                            style={{
+                              marginLeft:
+                                "18px",
+
+                              fontSize:
+                                "18px",
+
+                              fontWeight:
+                                600,
+                            }}
+                          >
+                            {formatTime(
+                              remainingSeconds
+                            )}
+                          </span>
+                        </>
+                      )}
+
+                      {timerComplete && (
+                        <span
+                          style={{
+                            display:
+                              "inline-block",
+
+                            color:
+                              "#2c3e70",
+
+                            fontWeight:
+                              600,
+
+                            fontSize:
+                              "18px",
+                          }}
+                        >
+                          0:00
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
