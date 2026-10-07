@@ -32,7 +32,6 @@ function App() {
   const timerIntervalRef = useRef<number | null>(null);
   const pulseTimeoutRef = useRef<number | null>(null);
 
-  // Two-note cue
   const audioContextRef = useRef<AudioContext | null>(null);
   const scheduledCueNodesRef = useRef<OscillatorNode[]>([]);
 
@@ -219,10 +218,7 @@ function App() {
           noteStart + 0.035
         );
 
-        gain.gain.exponentialRampToValueAtTime(
-          0.0001,
-          noteEnd
-        );
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
 
         oscillator.connect(gain);
         gain.connect(context.destination);
@@ -267,7 +263,6 @@ function App() {
           window.clearTimeout(pulseTimeoutRef.current);
         }
 
-        // Three gentle pulses over roughly 2.5 seconds.
         pulseTimeoutRef.current = window.setTimeout(() => {
           setCompletionPulse(false);
         }, 2500);
@@ -276,10 +271,7 @@ function App() {
 
     updateTimer();
 
-    timerIntervalRef.current = window.setInterval(
-      updateTimer,
-      250
-    );
+    timerIntervalRef.current = window.setInterval(updateTimer, 250);
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -356,8 +348,7 @@ function App() {
       return;
     }
 
-    const endTime =
-      Date.now() + remainingSeconds * 1000;
+    const endTime = Date.now() + remainingSeconds * 1000;
 
     setTimerEndTime(endTime);
     setIsPaused(false);
@@ -413,25 +404,40 @@ function App() {
               background-color: #eef1f9;
             }
           }
+
+          .planissimo-agenda-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #9aa7cb transparent;
+          }
+
+          .planissimo-agenda-scroll::-webkit-scrollbar {
+            width: 8px;
+          }
+
+          .planissimo-agenda-scroll::-webkit-scrollbar-track {
+            background: transparent;
+          }
+
+          .planissimo-agenda-scroll::-webkit-scrollbar-thumb {
+            background: #9aa7cb;
+            border-radius: 999px;
+          }
+
+          .planissimo-agenda-scroll::-webkit-scrollbar-thumb:hover {
+            background: #2c3e70;
+          }
         `}
       </style>
 
       <div
         style={{
-          minHeight: "100vh",
+          height: "100vh",
           width: "100%",
           margin: 0,
-
-          // More exposed background around the white surface.
           padding: "28px 32px",
-
           boxSizing: "border-box",
-          overflowX: "hidden",
+          overflow: "hidden",
 
-          /*
-            Abstract rhythmic background:
-            diagonal motion, soft circular beats, and subtle line structure.
-          */
           backgroundColor: "#2c3e70",
 
           backgroundImage: `
@@ -484,8 +490,10 @@ function App() {
         <div
           style={{
             width: "100%",
+            height: "100%",
 
-            minHeight: "calc(100vh - 56px)",
+            display: "flex",
+            flexDirection: "column",
 
             background: timerComplete
               ? "#eef1f9"
@@ -498,64 +506,72 @@ function App() {
             border: "2px solid #2c3e70",
             borderRadius: "16px",
 
-            padding: "60px 80px",
+            padding: "48px 70px 42px",
 
             boxSizing: "border-box",
+            overflow: "hidden",
 
             boxShadow:
               "0 12px 34px rgba(13, 24, 52, 0.30)",
           }}
         >
-          <h1
+          {/* FIXED HEADER AREA */}
+
+          <div
             style={{
-              fontFamily: "'Righteous', sans-serif",
-              fontSize: "46px",
-              color: "#2c3e70",
-              marginBottom: "6px",
-              letterSpacing: "1px",
+              flex: "0 0 auto",
             }}
           >
-            Planissimo
-          </h1>
-
-          <p
-            style={{
-              color: "#6b7280",
-              marginBottom: "40px",
-            }}
-          >
-            Where preparation becomes music.
-          </p>
-
-          {instances.length > 0 && (
-            <div
+            <h1
               style={{
-                marginBottom: "40px",
+                fontFamily: "'Righteous', sans-serif",
+                fontSize: "46px",
+                color: "#2c3e70",
+                marginTop: 0,
+                marginBottom: "6px",
+                letterSpacing: "1px",
               }}
             >
-              <select
-                value={selectedInstance || ""}
-                onChange={(e) => {
-                  clearTimerForStepChange();
-                  setSelectedInstance(e.target.value);
-                  setActiveStepIndex(null);
-                }}
+              Planissimo
+            </h1>
+
+            <p
+              style={{
+                color: "#6b7280",
+                marginTop: 0,
+                marginBottom: "30px",
+              }}
+            >
+              Where preparation becomes music.
+            </p>
+
+            {instances.length > 0 && (
+              <div
                 style={{
-                  padding: "12px",
-                  borderRadius: "8px",
-                  border: "2px solid #2c3e70",
-                  width: "100%",
-                  fontSize: "16px",
-                  fontFamily:
-                    "'Outfit', sans-serif",
+                  marginBottom: "26px",
                 }}
               >
-                <option value="">
-                  Select Rehearsal
-                </option>
+                <select
+                  value={selectedInstance || ""}
+                  onChange={(e) => {
+                    clearTimerForStepChange();
+                    setSelectedInstance(e.target.value);
+                    setActiveStepIndex(null);
+                  }}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "8px",
+                    border: "2px solid #2c3e70",
+                    width: "100%",
+                    fontSize: "16px",
+                    fontFamily: "'Outfit', sans-serif",
+                  }}
+                >
+                  <option value="">
+                    Select Rehearsal
+                  </option>
 
-                {instances.map(
-                  (instance, index) => {
+                  {instances.map((instance, index) => {
                     const [ensemble, date] =
                       instance.split("||");
 
@@ -568,299 +584,235 @@ function App() {
                         {formatDisplayDate(date)}
                       </option>
                     );
-                  }
-                )}
-              </select>
-            </div>
-          )}
-
-          {selectedInstance && (
-            <>
-              <h2
-                style={{
-                  color: "#2c3e70",
-                  marginBottom: "4px",
-                }}
-              >
-                {ensembleName}
-              </h2>
-
-              <div
-                style={{
-                  marginBottom: "30px",
-                  color: "#6b7280",
-                }}
-              >
-                {formatDisplayDate(displayDate)}
+                  })}
+                </select>
               </div>
+            )}
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "1fr 1.2fr",
-
-                  gap: "50px",
-                }}
-              >
-                {/* LEFT COLUMN */}
-
-                <div>
-                  {filteredData.map(
-                    (row, index) => {
-                      const isActive =
-                        index ===
-                        activeStepIndex;
-
-                      return (
-                        <div
-                          key={index}
-                          onClick={() => {
-                            clearTimerForStepChange();
-                            setActiveStepIndex(
-                              index
-                            );
-                          }}
-                          style={{
-                            padding: "12px",
-                            marginBottom:
-                              "14px",
-
-                            cursor: "pointer",
-
-                            borderLeft:
-                              isActive
-                                ? "8px solid #2c3e70"
-                                : "8px solid transparent",
-
-                            background:
-                              isActive
-                                ? "#eef1f9"
-                                : "transparent",
-
-                            fontWeight: 500,
-                          }}
-                        >
-                          {
-                            row[
-                              "Agenda Step"
-                            ]
-                          }
-
-                          <div
-                            style={{
-                              fontSize:
-                                "13px",
-
-                              color:
-                                "#6b7280",
-
-                              marginTop:
-                                "4px",
-                            }}
-                          >
-                            {
-                              row[
-                                "Time Allotted"
-                              ]
-                            }{" "}
-                            minutes
-                          </div>
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-
-                {/* RIGHT COLUMN */}
+            {selectedInstance && (
+              <>
+                <h2
+                  style={{
+                    color: "#2c3e70",
+                    marginTop: 0,
+                    marginBottom: "4px",
+                  }}
+                >
+                  {ensembleName}
+                </h2>
 
                 <div
                   style={{
-                    borderLeft:
-                      "2px solid #2c3e70",
-
-                    paddingLeft:
-                      "35px",
+                    marginBottom: "24px",
+                    color: "#6b7280",
                   }}
                 >
-                  {!activeStep && (
+                  {formatDisplayDate(displayDate)}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* FIXED WORKSPACE / SCROLLABLE AGENDA */}
+
+          {selectedInstance && (
+            <div
+              style={{
+                flex: "1 1 auto",
+                minHeight: 0,
+
+                display: "grid",
+                gridTemplateColumns: "1fr 1.2fr",
+                gap: "50px",
+
+                overflow: "hidden",
+              }}
+            >
+              {/* LEFT COLUMN — ONLY THIS SCROLLS */}
+
+              <div
+                className="planissimo-agenda-scroll"
+                style={{
+                  minHeight: 0,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+
+                  paddingRight: "16px",
+                  overscrollBehavior: "contain",
+                }}
+              >
+                {filteredData.map((row, index) => {
+                  const isActive =
+                    index === activeStepIndex;
+
+                  return (
                     <div
+                      key={index}
+                      onClick={() => {
+                        clearTimerForStepChange();
+                        setActiveStepIndex(index);
+                      }}
                       style={{
-                        color:
-                          "#6b7280",
+                        padding: "12px",
+                        marginBottom: "14px",
+                        cursor: "pointer",
+
+                        borderLeft: isActive
+                          ? "8px solid #2c3e70"
+                          : "8px solid transparent",
+
+                        background: isActive
+                          ? "#eef1f9"
+                          : "transparent",
+
+                        fontWeight: 500,
                       }}
                     >
-                      Select a rehearsal
-                      focus.
+                      {row["Agenda Step"]}
+
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          color: "#6b7280",
+                          marginTop: "4px",
+                        }}
+                      >
+                        {row["Time Allotted"]} minutes
+                      </div>
                     </div>
-                  )}
+                  );
+                })}
+              </div>
 
-                  {activeStep && (
-                    <>
-                      <h3
-                        style={{
-                          color:
-                            "#2c3e70",
+              {/* RIGHT COLUMN — STAYS PUT */}
 
-                          marginBottom:
-                            "10px",
-                        }}
-                      >
-                        {
-                          activeStep[
-                            "Agenda Step"
-                          ]
-                        }
-                      </h3>
+              <div
+                style={{
+                  minHeight: 0,
+                  overflow: "hidden",
 
-                      <div
-                        style={{
-                          marginBottom:
-                            "10px",
+                  borderLeft: "2px solid #2c3e70",
+                  paddingLeft: "35px",
+                }}
+              >
+                {!activeStep && (
+                  <div
+                    style={{
+                      color: "#6b7280",
+                    }}
+                  >
+                    Select a rehearsal focus.
+                  </div>
+                )}
 
-                          color:
-                            "#6b7280",
-                        }}
-                      >
-                        {
-                          activeStep[
-                            "Time Allotted"
-                          ]
-                        }{" "}
-                        minutes
-                      </div>
+                {activeStep && (
+                  <>
+                    <h3
+                      style={{
+                        color: "#2c3e70",
+                        marginTop: 0,
+                        marginBottom: "10px",
+                      }}
+                    >
+                      {activeStep["Agenda Step"]}
+                    </h3>
 
-                      <div
-                        style={{
-                          marginBottom:
-                            "25px",
-                        }}
-                      >
-                        {
-                          activeStep[
-                            "Objective"
-                          ]
-                        }
-                      </div>
+                    <div
+                      style={{
+                        marginBottom: "10px",
+                        color: "#6b7280",
+                      }}
+                    >
+                      {activeStep["Time Allotted"]} minutes
+                    </div>
 
-                      {!activeTimer &&
-                        !timerComplete && (
-                          <button
-                            onClick={() =>
-                              startTimer(
-                                Number(
-                                  activeStep[
-                                    "Time Allotted"
-                                  ]
-                                ) || 0
-                              )
-                            }
-                            style={{
-                              padding:
-                                "10px 18px",
+                    <div
+                      style={{
+                        marginBottom: "25px",
+                      }}
+                    >
+                      {activeStep["Objective"]}
+                    </div>
 
-                              background:
-                                "#2c3e70",
-
-                              color:
-                                "white",
-
-                              border:
-                                "none",
-
-                              borderRadius:
-                                "8px",
-
-                              cursor:
-                                "pointer",
-
-                              fontFamily:
-                                "'Outfit', sans-serif",
-                            }}
-                          >
-                            Start
-                          </button>
-                        )}
-
-                      {activeTimer && (
-                        <>
-                          <button
-                            onClick={
-                              isPaused
-                                ? resumeTimer
-                                : pauseTimer
-                            }
-                            style={{
-                              padding:
-                                "10px 18px",
-
-                              background:
-                                "#2c3e70",
-
-                              color:
-                                "white",
-
-                              border:
-                                "none",
-
-                              borderRadius:
-                                "8px",
-
-                              cursor:
-                                "pointer",
-
-                              fontFamily:
-                                "'Outfit', sans-serif",
-                            }}
-                          >
-                            {isPaused
-                              ? "Resume"
-                              : "Pause"}
-                          </button>
-
-                          <span
-                            style={{
-                              marginLeft:
-                                "18px",
-
-                              fontSize:
-                                "18px",
-
-                              fontWeight:
-                                600,
-                            }}
-                          >
-                            {formatTime(
-                              remainingSeconds
-                            )}
-                          </span>
-                        </>
-                      )}
-
-                      {timerComplete && (
-                        <span
+                    {!activeTimer &&
+                      !timerComplete && (
+                        <button
+                          onClick={() =>
+                            startTimer(
+                              Number(
+                                activeStep["Time Allotted"]
+                              ) || 0
+                            )
+                          }
                           style={{
-                            display:
-                              "inline-block",
-
-                            color:
-                              "#2c3e70",
-
-                            fontWeight:
-                              600,
-
-                            fontSize:
-                              "18px",
+                            padding: "10px 18px",
+                            background: "#2c3e70",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            fontFamily:
+                              "'Outfit', sans-serif",
                           }}
                         >
-                          0:00
-                        </span>
+                          Start
+                        </button>
                       )}
-                    </>
-                  )}
-                </div>
+
+                    {activeTimer && (
+                      <>
+                        <button
+                          onClick={
+                            isPaused
+                              ? resumeTimer
+                              : pauseTimer
+                          }
+                          style={{
+                            padding: "10px 18px",
+                            background: "#2c3e70",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            fontFamily:
+                              "'Outfit', sans-serif",
+                          }}
+                        >
+                          {isPaused
+                            ? "Resume"
+                            : "Pause"}
+                        </button>
+
+                        <span
+                          style={{
+                            marginLeft: "18px",
+                            fontSize: "18px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {formatTime(
+                            remainingSeconds
+                          )}
+                        </span>
+                      </>
+                    )}
+
+                    {timerComplete && (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          color: "#2c3e70",
+                          fontWeight: 600,
+                          fontSize: "18px",
+                        }}
+                      >
+                        0:00
+                      </span>
+                    )}
+                  </>
+                )}
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
