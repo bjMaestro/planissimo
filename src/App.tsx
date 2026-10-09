@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useRef } from "react";
 import Papa from "papaparse";
 
@@ -385,27 +386,145 @@ function App() {
       ? filteredData[activeStepIndex]
       : null;
 
-  // ---------- UI ----------
+  // ---------- RESPONSIVE UI ----------
+  // Container queries react to the embedded frame width.
+  // All data and timer behavior above is unchanged.
 
   return (
     <>
       <style>
         {`
           @keyframes planissimoTimerPulse {
-            0% {
-              background-color: #eef1f9;
-            }
+            0% { background-color: #eef1f9; }
+            50% { background-color: #cfd9f7; }
+            100% { background-color: #eef1f9; }
+          }
 
-            50% {
-              background-color: #cfd9f7;
-            }
+          .planissimo-outer {
+            height: 100vh;
+            height: 100dvh;
+            width: 100%;
+            margin: 0;
+            padding: clamp(8px, 2.5cqw, 28px)
+                     clamp(8px, 2.8cqw, 32px);
+            box-sizing: border-box;
+            overflow: hidden;
+            container-type: inline-size;
+            background-color: #2c3e70;
+            background-image:
+              radial-gradient(circle at 14% 22%,
+                rgba(255,255,255,0.13) 0px,
+                rgba(255,255,255,0.13) 3px,
+                transparent 4px),
+              radial-gradient(circle at 84% 68%,
+                rgba(255,255,255,0.10) 0px,
+                rgba(255,255,255,0.10) 4px,
+                transparent 5px),
+              repeating-linear-gradient(135deg,
+                transparent 0px,
+                transparent 54px,
+                rgba(255,255,255,0.07) 54px,
+                rgba(255,255,255,0.07) 56px,
+                transparent 56px,
+                transparent 108px),
+              repeating-linear-gradient(45deg,
+                transparent 0px,
+                transparent 145px,
+                rgba(255,255,255,0.045) 145px,
+                rgba(255,255,255,0.045) 147px,
+                transparent 147px,
+                transparent 290px),
+              linear-gradient(135deg,
+                #22335f 0%,
+                #2c3e70 50%,
+                #38518a 100%);
+            font-family: 'Outfit', sans-serif;
+            color: #1f2233;
+          }
 
-            100% {
-              background-color: #eef1f9;
-            }
+          .planissimo-surface {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            padding: clamp(12px, 4cqw, 48px)
+                     clamp(12px, 6cqw, 70px)
+                     clamp(12px, 3.5cqw, 42px);
+            box-sizing: border-box;
+            overflow: hidden;
+            border: 2px solid #2c3e70;
+            border-radius: 16px;
+            box-shadow: 0 12px 34px rgba(13,24,52,0.30);
+          }
+
+          .planissimo-header {
+            flex: 0 0 auto;
+            min-width: 0;
+          }
+
+          .planissimo-title {
+            font-family: 'Righteous', sans-serif;
+            font-size: clamp(23px, 4cqw, 46px);
+            line-height: 1.12;
+            color: #2c3e70;
+            margin: 0 0 clamp(3px, 0.6cqw, 6px);
+            letter-spacing: 1px;
+          }
+
+          .planissimo-tagline {
+            color: #6b7280;
+            font-size: clamp(12px, 1.45cqw, 16px);
+            margin: 0 0 clamp(10px, 2.5cqw, 30px);
+          }
+
+          .planissimo-selector-wrap {
+            margin-bottom: clamp(10px, 2.2cqw, 26px);
+          }
+
+          .planissimo-selector {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            padding: clamp(6px, 1.1cqw, 12px);
+            border: 2px solid #2c3e70;
+            border-radius: 8px;
+            font-size: clamp(12px, 1.45cqw, 16px);
+            font-family: 'Outfit', sans-serif;
+            background: white;
+            color: #1f2233;
+          }
+
+          .planissimo-ensemble {
+            color: #2c3e70;
+            font-size: clamp(17px, 2.4cqw, 26px);
+            line-height: 1.15;
+            margin: 0 0 4px;
+          }
+
+          .planissimo-date {
+            color: #6b7280;
+            font-size: clamp(12px, 1.4cqw, 16px);
+            margin-bottom: clamp(10px, 2cqw, 24px);
+          }
+
+          .planissimo-workspace {
+            flex: 1 1 auto;
+            min-height: 0;
+            min-width: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+            gap: clamp(8px, 4.3cqw, 50px);
+            overflow: hidden;
           }
 
           .planissimo-agenda-scroll {
+            min-width: 0;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: clamp(3px, 1.4cqw, 16px);
+            overscroll-behavior: contain;
             scrollbar-width: thin;
             scrollbar-color: #9aa7cb transparent;
           }
@@ -426,162 +545,130 @@ function App() {
           .planissimo-agenda-scroll::-webkit-scrollbar-thumb:hover {
             background: #2c3e70;
           }
+
+          .planissimo-agenda-step {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: clamp(6px, 1.1cqw, 12px);
+            margin-bottom: clamp(6px, 1.2cqw, 14px);
+            border: none;
+            border-left: clamp(4px, 0.7cqw, 8px) solid transparent;
+            background: transparent;
+            color: #1f2233;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(12px, 1.45cqw, 16px);
+            font-weight: 500;
+            overflow-wrap: anywhere;
+          }
+
+          .planissimo-agenda-step.is-active {
+            border-left-color: #2c3e70;
+            background: #eef1f9;
+          }
+
+          .planissimo-step-time {
+            font-size: clamp(11px, 1.15cqw, 13px);
+            color: #6b7280;
+            margin-top: 4px;
+          }
+
+          .planissimo-focus {
+            min-width: 0;
+            min-height: 0;
+            overflow: auto;
+            border-left: 2px solid #2c3e70;
+            padding-left: clamp(8px, 3cqw, 35px);
+            font-size: clamp(12px, 1.45cqw, 16px);
+            overflow-wrap: anywhere;
+          }
+
+          .planissimo-focus-title {
+            color: #2c3e70;
+            font-size: clamp(15px, 2cqw, 22px);
+            line-height: 1.2;
+            margin: 0 0 10px;
+          }
+
+          .planissimo-focus-time {
+            margin-bottom: 10px;
+            color: #6b7280;
+          }
+
+          .planissimo-objective {
+            margin-bottom: clamp(12px, 2.2cqw, 25px);
+          }
+
+          .planissimo-timer-button {
+            padding: clamp(6px, 0.9cqw, 10px)
+                     clamp(8px, 1.6cqw, 18px);
+            background: #2c3e70;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(12px, 1.35cqw, 16px);
+          }
+
+          .planissimo-timer-value {
+            display: inline-block;
+            margin-left: clamp(6px, 1.5cqw, 18px);
+            font-size: clamp(13px, 1.6cqw, 18px);
+            font-weight: 600;
+          }
+
+          @container (max-width: 540px) {
+            .planissimo-surface {
+              border-radius: 10px;
+            }
+
+            .planissimo-workspace {
+              grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+            }
+          }
         `}
       </style>
 
-      <div
-        style={{
-          height: "100vh",
-          width: "100%",
-          margin: 0,
-          padding: "28px 32px",
-          boxSizing: "border-box",
-          overflow: "hidden",
-
-          backgroundColor: "#2c3e70",
-
-          backgroundImage: `
-            radial-gradient(
-              circle at 14% 22%,
-              rgba(255,255,255,0.13) 0px,
-              rgba(255,255,255,0.13) 3px,
-              transparent 4px
-            ),
-
-            radial-gradient(
-              circle at 84% 68%,
-              rgba(255,255,255,0.10) 0px,
-              rgba(255,255,255,0.10) 4px,
-              transparent 5px
-            ),
-
-            repeating-linear-gradient(
-              135deg,
-              transparent 0px,
-              transparent 54px,
-              rgba(255,255,255,0.07) 54px,
-              rgba(255,255,255,0.07) 56px,
-              transparent 56px,
-              transparent 108px
-            ),
-
-            repeating-linear-gradient(
-              45deg,
-              transparent 0px,
-              transparent 145px,
-              rgba(255,255,255,0.045) 145px,
-              rgba(255,255,255,0.045) 147px,
-              transparent 147px,
-              transparent 290px
-            ),
-
-            linear-gradient(
-              135deg,
-              #22335f 0%,
-              #2c3e70 50%,
-              #38518a 100%
-            )
-          `,
-
-          fontFamily: "'Outfit', sans-serif",
-          color: "#1f2233",
-        }}
-      >
+      <div className="planissimo-outer">
         <div
+          className="planissimo-surface"
           style={{
-            width: "100%",
-            height: "100%",
-
-            display: "flex",
-            flexDirection: "column",
-
-            background: timerComplete
-              ? "#eef1f9"
-              : "white",
-
+            background: timerComplete ? "#eef1f9" : "white",
             animation: completionPulse
               ? "planissimoTimerPulse 0.8s ease-in-out 3"
               : "none",
-
-            border: "2px solid #2c3e70",
-            borderRadius: "16px",
-
-            padding: "48px 70px 42px",
-
-            boxSizing: "border-box",
-            overflow: "hidden",
-
-            boxShadow:
-              "0 12px 34px rgba(13, 24, 52, 0.30)",
           }}
         >
           {/* FIXED HEADER AREA */}
 
-          <div
-            style={{
-              flex: "0 0 auto",
-            }}
-          >
-            <h1
-              style={{
-                fontFamily: "'Righteous', sans-serif",
-                fontSize: "46px",
-                color: "#2c3e70",
-                marginTop: 0,
-                marginBottom: "6px",
-                letterSpacing: "1px",
-              }}
-            >
-              Planissimo
-            </h1>
+          <div className="planissimo-header">
+            <h1 className="planissimo-title">Planissimo</h1>
 
-            <p
-              style={{
-                color: "#6b7280",
-                marginTop: 0,
-                marginBottom: "30px",
-              }}
-            >
+            <p className="planissimo-tagline">
               Where preparation becomes music.
             </p>
 
             {instances.length > 0 && (
-              <div
-                style={{
-                  marginBottom: "26px",
-                }}
-              >
+              <div className="planissimo-selector-wrap">
                 <select
+                  className="planissimo-selector"
                   value={selectedInstance || ""}
                   onChange={(e) => {
                     clearTimerForStepChange();
                     setSelectedInstance(e.target.value);
                     setActiveStepIndex(null);
                   }}
-                  style={{
-                    padding: "12px",
-                    borderRadius: "8px",
-                    border: "2px solid #2c3e70",
-                    width: "100%",
-                    fontSize: "16px",
-                    fontFamily: "'Outfit', sans-serif",
-                  }}
                 >
-                  <option value="">
-                    Select Rehearsal
-                  </option>
+                  <option value="">Select Rehearsal</option>
 
                   {instances.map((instance, index) => {
-                    const [ensemble, date] =
-                      instance.split("||");
+                    const [ensemble, date] = instance.split("||");
 
                     return (
-                      <option
-                        key={index}
-                        value={instance}
-                      >
-                        {ensemble} —{" "}
-                        {formatDisplayDate(date)}
+                      <option key={index} value={instance}>
+                        {ensemble} — {formatDisplayDate(date)}
                       </option>
                     );
                   })}
@@ -591,220 +678,109 @@ function App() {
 
             {selectedInstance && (
               <>
-                <h2
-                  style={{
-                    color: "#2c3e70",
-                    marginTop: 0,
-                    marginBottom: "4px",
-                  }}
-                >
+                <h2 className="planissimo-ensemble">
                   {ensembleName}
                 </h2>
 
-                <div
-                  style={{
-                    marginBottom: "24px",
-                    color: "#6b7280",
-                  }}
-                >
+                <div className="planissimo-date">
                   {formatDisplayDate(displayDate)}
                 </div>
               </>
             )}
           </div>
 
-          {/* FIXED WORKSPACE / SCROLLABLE AGENDA */}
+          {/* TWO-COLUMN REHEARSAL WORKSPACE */}
 
           {selectedInstance && (
-            <div
-              style={{
-                flex: "1 1 auto",
-                minHeight: 0,
+            <div className="planissimo-workspace">
+              {/* LEFT — INDEPENDENTLY SCROLLABLE AGENDA */}
 
-                display: "grid",
-                gridTemplateColumns: "1fr 1.2fr",
-                gap: "50px",
-
-                overflow: "hidden",
-              }}
-            >
-              {/* LEFT COLUMN — ONLY THIS SCROLLS */}
-
-              <div
-                className="planissimo-agenda-scroll"
-                style={{
-                  minHeight: 0,
-                  overflowY: "auto",
-                  overflowX: "hidden",
-
-                  paddingRight: "16px",
-                  overscrollBehavior: "contain",
-                }}
-              >
+              <div className="planissimo-agenda-scroll">
                 {filteredData.map((row, index) => {
-                  const isActive =
-                    index === activeStepIndex;
+                  const isActive = index === activeStepIndex;
 
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={index}
+                      className={
+                        "planissimo-agenda-step" +
+                        (isActive ? " is-active" : "")
+                      }
                       onClick={() => {
                         clearTimerForStepChange();
                         setActiveStepIndex(index);
                       }}
-                      style={{
-                        padding: "12px",
-                        marginBottom: "14px",
-                        cursor: "pointer",
-
-                        borderLeft: isActive
-                          ? "8px solid #2c3e70"
-                          : "8px solid transparent",
-
-                        background: isActive
-                          ? "#eef1f9"
-                          : "transparent",
-
-                        fontWeight: 500,
-                      }}
                     >
                       {row["Agenda Step"]}
 
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          color: "#6b7280",
-                          marginTop: "4px",
-                        }}
-                      >
+                      <div className="planissimo-step-time">
                         {row["Time Allotted"]} minutes
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
 
-              {/* RIGHT COLUMN — STAYS PUT */}
+              {/* RIGHT — REHEARSAL FOCUS */}
 
-              <div
-                style={{
-                  minHeight: 0,
-                  overflow: "hidden",
-
-                  borderLeft: "2px solid #2c3e70",
-                  paddingLeft: "35px",
-                }}
-              >
+              <div className="planissimo-focus">
                 {!activeStep && (
-                  <div
-                    style={{
-                      color: "#6b7280",
-                    }}
-                  >
+                  <div style={{ color: "#6b7280" }}>
                     Select a rehearsal focus.
                   </div>
                 )}
 
                 {activeStep && (
                   <>
-                    <h3
-                      style={{
-                        color: "#2c3e70",
-                        marginTop: 0,
-                        marginBottom: "10px",
-                      }}
-                    >
+                    <h3 className="planissimo-focus-title">
                       {activeStep["Agenda Step"]}
                     </h3>
 
-                    <div
-                      style={{
-                        marginBottom: "10px",
-                        color: "#6b7280",
-                      }}
-                    >
+                    <div className="planissimo-focus-time">
                       {activeStep["Time Allotted"]} minutes
                     </div>
 
-                    <div
-                      style={{
-                        marginBottom: "25px",
-                      }}
-                    >
+                    <div className="planissimo-objective">
                       {activeStep["Objective"]}
                     </div>
 
-                    {!activeTimer &&
-                      !timerComplete && (
-                        <button
-                          onClick={() =>
-                            startTimer(
-                              Number(
-                                activeStep["Time Allotted"]
-                              ) || 0
-                            )
-                          }
-                          style={{
-                            padding: "10px 18px",
-                            background: "#2c3e70",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            fontFamily:
-                              "'Outfit', sans-serif",
-                          }}
-                        >
-                          Start
-                        </button>
-                      )}
+                    {!activeTimer && !timerComplete && (
+                      <button
+                        type="button"
+                        className="planissimo-timer-button"
+                        onClick={() =>
+                          startTimer(
+                            Number(activeStep["Time Allotted"]) || 0
+                          )
+                        }
+                      >
+                        Start
+                      </button>
+                    )}
 
                     {activeTimer && (
                       <>
                         <button
+                          type="button"
+                          className="planissimo-timer-button"
                           onClick={
-                            isPaused
-                              ? resumeTimer
-                              : pauseTimer
+                            isPaused ? resumeTimer : pauseTimer
                           }
-                          style={{
-                            padding: "10px 18px",
-                            background: "#2c3e70",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            fontFamily:
-                              "'Outfit', sans-serif",
-                          }}
                         >
-                          {isPaused
-                            ? "Resume"
-                            : "Pause"}
+                          {isPaused ? "Resume" : "Pause"}
                         </button>
 
-                        <span
-                          style={{
-                            marginLeft: "18px",
-                            fontSize: "18px",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {formatTime(
-                            remainingSeconds
-                          )}
+                        <span className="planissimo-timer-value">
+                          {formatTime(remainingSeconds)}
                         </span>
                       </>
                     )}
 
                     {timerComplete && (
                       <span
-                        style={{
-                          display: "inline-block",
-                          color: "#2c3e70",
-                          fontWeight: 600,
-                          fontSize: "18px",
-                        }}
+                        className="planissimo-timer-value"
+                        style={{ color: "#2c3e70", marginLeft: 0 }}
                       >
                         0:00
                       </span>
